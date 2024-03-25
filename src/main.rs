@@ -6,7 +6,11 @@ fn main() {
     let width = 1000;
     let height = 1000;
     let mut pixels: Vec<Vec<[u8;3]>> = create_pixels(width, height);
+    use std::time::Instant;
+    let now = Instant::now();
     rasterize(&mut pixels, (0,444), (444,999), (999, 0), [0xFF, 0x00, 0x00]);
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
     pixels_to_ppm(height,width, pixels);
 }
 
@@ -196,7 +200,7 @@ fn rasterize(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 : (isize, is
     let mut cy2 = c2 + dx23 * min_y - dy23 * min_x;
     let mut cy3 = c3 + dx31 * min_y - dy31 * min_x;
 
-    let block_size = 1;
+    let block_size: isize = 100;
 
     for y in min_y..max_y  {
         
@@ -205,10 +209,11 @@ fn rasterize(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 : (isize, is
         let mut cx3 = cy3;
 
 
-        for x in min_x..max_x {
-            if (cx1 > 0 && cx2 > 0 && cx3 > 0) {
-                    pixels[x as usize][y as usize] = color;
-            }
+        for mut x in min_x..max_x {
+                if (cx1 > 0 && cx2 > 0 && cx3 > 0) {
+                        pixels[x as usize][y as usize] = color;
+                }
+
             cx1 -= dy12;
             cx2  -= dy23;
             cx3 -= dy31;
