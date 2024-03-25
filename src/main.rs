@@ -1,17 +1,14 @@
 use std::fs::{File,remove_file};
-use std::io::{Read,Write};
+use std::io::Write;
 use std::path::Path;
+use std::io::BufWriter;
 
 fn main() {
     let width = 1000;
     let height = 1000;
     let mut pixels: Vec<Vec<[u8;3]>> = create_pixels(width, height);
-    use std::time::Instant;
-    let now = Instant::now();
     rasterize(&mut pixels, (0,444), (444,999), (999, 0), [0xFF, 0x00, 0x00]);
-    let elapsed = now.elapsed();
-    println!("Elapsed: {:.2?}", elapsed);
-    pixels_to_ppm(height,width, pixels);
+    pixels_to_ppm(height, width, pixels);
 }
 
 fn pixels_to_ppm(width: usize, height: usize, pixels: Vec<Vec<[u8;3]>>){
@@ -35,14 +32,17 @@ fn pixels_to_ppm(width: usize, height: usize, pixels: Vec<Vec<[u8;3]>>){
         Err(_) => panic!("Could not write to the file."),
     };
 
+    let mut reader = BufWriter::new(file);
+    
     for pixel in &pixels {
         for pix in pixel {
-            match file.write(pix){
+            match reader.write(pix){
                 Ok(_) => (),
                 Err(_) => panic!("Could not write to the file."),
             };
         }
     }
+    
 }
 
 fn create_pixels(width: usize, height: usize) -> Vec<Vec<[u8; 3]>> {
@@ -178,13 +178,13 @@ fn draw_filled_triangle(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (usize, usize), p2 :
 }
 
 fn rasterize(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 : (isize, isize), p3 : (isize, isize), color:[u8;3]){
-    let dx12: isize = (p1.0-p2.0);
-    let dx23: isize = (p2.0-p3.0);
-    let dx31: isize = (p3.0-p1.0) ;
+    let dx12: isize = p1.0-p2.0;
+    let dx23: isize = p2.0-p3.0;
+    let dx31: isize = p3.0-p1.0 ;
 
-    let dy12: isize = (p1.1-p2.1);
-    let dy23: isize = (p2.1-p3.1);
-    let dy31: isize = (p3.1-p1.1);
+    let dy12: isize = p1.1-p2.1;
+    let dy23: isize = p2.1-p3.1;
+    let dy31: isize = p3.1-p1.1;
 
     let min_x = min(p1.0,p2.0,p3.0);
     let min_y = min(p1.1,p2.1,p3.1);
@@ -200,7 +200,7 @@ fn rasterize(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 : (isize, is
     let mut cy2 = c2 + dx23 * min_y - dy23 * min_x;
     let mut cy3 = c3 + dx31 * min_y - dy31 * min_x;
 
-    let block_size: isize = 100;
+    let _block_size: isize = 100;
 
     for y in min_y..max_y  {
         
@@ -209,8 +209,8 @@ fn rasterize(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 : (isize, is
         let mut cx3 = cy3;
 
 
-        for mut x in min_x..max_x {
-                if (cx1 > 0 && cx2 > 0 && cx3 > 0) {
+        for x in min_x..max_x {
+                if cx1 > 0 && cx2 > 0 && cx3 > 0 {
                         pixels[x as usize][y as usize] = color;
                 }
 
@@ -256,4 +256,4 @@ fn max(a: isize, b: isize, c: isize) -> isize {
             return c;
         }
     }
-}
+} 
