@@ -4,14 +4,15 @@ use std::path::Path;
 use std::io::BufWriter;
 
 fn main() {
+    //IMPORTANT ITS pixel[y][x]
     let width = 1000;
     let height = 1000;
     let mut pixels: Vec<Vec<[u8;3]>> = create_pixels(width, height);
     rasterize(&mut pixels, (0,444), (444,999), (999, 0), [0xFF, 0x00, 0x00]);
-    pixels_to_ppm(height, width, pixels);
+    pixels_to_ppm(pixels);
 }
 
-fn pixels_to_ppm(width: usize, height: usize, pixels: Vec<Vec<[u8;3]>>){
+fn pixels_to_ppm(pixels: Vec<Vec<[u8;3]>>){
     let output_path:&str = "Output.ppm";
     let mut file:File;
     if Path::new(output_path).exists() {
@@ -26,7 +27,7 @@ fn pixels_to_ppm(width: usize, height: usize, pixels: Vec<Vec<[u8;3]>>){
         Err(_) =>  panic!("Could not create file.")
     };
 
-    let header = format!("P6 {} {} 255\n", width, height);
+    let header = format!("P6 {} {} 255\n", pixels.len(), pixels[0].len());
     match file.write(header.as_bytes()){
         Ok(_) => (),
         Err(_) => panic!("Could not write to the file."),
@@ -47,7 +48,7 @@ fn pixels_to_ppm(width: usize, height: usize, pixels: Vec<Vec<[u8;3]>>){
 
 fn create_pixels(width: usize, height: usize) -> Vec<Vec<[u8; 3]>> {
     let white:[u8;3] = [0xFF;3];
-    let pixels = vec![vec![white;width];height];
+    let pixels = vec![vec![white;height];width];
     return pixels;
 }
 
@@ -95,7 +96,7 @@ fn draw_line(pixels: &mut Vec<Vec<[u8;3]>>, start: (usize, usize), end: (usize, 
 
     let mut err:isize = deltafd/2;
 
-    pixels[start.0][start.1] = [0x00;3];
+    pixels[start.1][start.0] = [0x00;3];
 
     for _i in 0..deltafd{
         err -= deltasd;
@@ -108,7 +109,7 @@ fn draw_line(pixels: &mut Vec<Vec<[u8;3]>>, start: (usize, usize), end: (usize, 
              x += pdx as isize;
              y += pdy as isize;
         }
-        pixels[x as usize][y as usize] = [0x00;3];
+        pixels[y as usize][x as usize] = [0x00;3];
     }
 }
 
@@ -130,51 +131,6 @@ fn draw_triangle_outline(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (usize, usize), p2 
     draw_line(pixels, p1, p2);
     draw_line(pixels, p2, p3);
     draw_line(pixels, p1, p3);
-}
-
-fn fill(pixels: &mut Vec<Vec<[u8;3]>>, pos:(usize, usize), color: [u8;3]){
-
-    let pos_color = pixels[pos.0][pos.1];
-
-    if pos_color == color{return;}
-
-    let mut x = pos.0;
-    let mut y = pos.1;
-
-    let mut vector = vec![(pos.0, pos.1)];
-
-    pixels[x][y]=color;
-
-    while vector.len() > 0{
-       x = vector[0].0;
-       y = vector[0].1;
-       
-
-       if x > 0 && pixels[x-1][y] != color && pixels[x-1][y] == pos_color{
-           vector.push((x-1,y));
-           pixels[x-1][y]=color;
-       }
-       if x < pixels.len()-1 && pixels[x+1][y] != color && pixels[x+1][y] == pos_color{
-            vector.push((x+1,y));
-            pixels[x+1][y]=color;
-       }
-       if y > 0 && pixels[x][y-1] != color && pixels[x][y-1] == pos_color{
-            vector.push((x,y-1));
-            pixels[x][y-1]=color;
-        }
-       if y < pixels[0].len()-1 && pixels[x][y+1] != color && pixels[x][y+1] == pos_color{
-            vector.push((x,y+1));
-            pixels[x][y+1]=color;
-       }
-       vector.remove(0);
-    }
-}
-
-fn draw_filled_triangle(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (usize, usize), p2 : (usize, usize), p3 : (usize, usize), color:[u8; 3]){
-    draw_triangle_outline(pixels,p1,p2,p3);
-    let x = (p1.0+p2.0+p3.0) / 3;
-    let y = (p1.1+p2.1+p3.1) / 3;
-    fill(pixels,(x,y), color);
 }
 
 fn rasterize(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 : (isize, isize), p3 : (isize, isize), color:[u8;3]){
@@ -211,7 +167,7 @@ fn rasterize(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 : (isize, is
 
         for x in min_x..max_x {
                 if cx1 > 0 && cx2 > 0 && cx3 > 0 {
-                        pixels[x as usize][y as usize] = color;
+                        pixels[y as usize][x as usize] = color;
                 }
 
             cx1 -= dy12;
