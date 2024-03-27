@@ -8,7 +8,7 @@ fn main() {
     let width = 1000;
     let height = 1000;
     let mut pixels: Vec<Vec<[u8;3]>> = create_pixels(width, height);
-    draw_square_filled(&mut pixels, (100,100), 400, [0,255,255]);
+    draw_quadrangle_filled(&mut pixels, (100, 100), (1000, 200), (500, 1000), (900, 700), [0,255,255]);
     pixels_to_ppm(pixels);
 }
 
@@ -282,4 +282,16 @@ fn draw_square_filled(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize),
             pixels[y as usize][x as usize] = color;
         }
     }
+}
+
+fn draw_quadrangle_outline(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize), upper_right: (usize, usize) , lower_left: (usize, usize), lower_right: (usize, usize) ){
+    draw_line(pixels,  upper_left, upper_right);
+    draw_line(pixels,  upper_right, lower_right);
+    draw_line(pixels,  lower_right, lower_left);
+    draw_line(pixels, lower_left, upper_left);
+}
+
+fn draw_quadrangle_filled(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (isize, isize), upper_right: (isize, isize) , lower_left: (isize, isize), lower_right: (isize, isize), color: [u8;3] ){
+    rasterize(pixels, upper_left, lower_left, upper_right, color);
+    rasterize(pixels, lower_right, upper_right, lower_left, color);
 }
