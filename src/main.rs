@@ -4,11 +4,11 @@ use std::path::Path;
 use std::io::BufWriter;
 
 fn main() {
-    //IMPORTANT ITS pixel[y][x]
+    //IMPORTANT ITS pixels[y][x]
     let width = 1000;
     let height = 1000;
     let mut pixels: Vec<Vec<[u8;3]>> = create_pixels(width, height);
-    rasterize(&mut pixels, (0,444), (444,999), (999, 0), [0xFF, 0x00, 0x00]);
+    draw_square_filled(&mut pixels, (100,100), 400, [0,255,255]);
     pixels_to_ppm(pixels);
 }
 
@@ -213,3 +213,73 @@ fn max(a: isize, b: isize, c: isize) -> isize {
         }
     }
 } 
+
+fn quadrangle_outline(pixels: &mut Vec<Vec<[u8;3]>>, p1: (usize, usize), p2: (usize, usize), p3: (usize, usize), p4: (usize, usize)){
+    draw_line(pixels, p1, p2);
+    draw_line(pixels, p2, p3);
+    draw_line(pixels, p3, p4);
+    draw_line(pixels, p4, p1);
+}
+
+fn draw_filled_triangle(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 : (isize, isize), p3 : (isize, isize), color:[u8;3]){
+    let mut p1 = p1;
+    let mut p2 = p2;
+    let mut p3 = p3;
+    if p1.0 > p2.0{
+        println!("Switch");
+        let temp = p1;
+        p1 = p2;
+        p2 = temp;
+    }
+    if p2.1 > p3.1{
+        println!("Switch");
+        let temp = p2;
+        p2 = p3;
+        p3 = temp;
+    }
+    if p1.0 > p2.0{
+        println!("Switch");
+        let temp = p1;
+        p1 = p2;
+        p2 = temp;
+    }
+    if p2.1 > p3.1{
+        println!("Switch");
+        let temp = p2;
+        p2 = p3;
+        p3 = temp;
+    }
+    if p1.0 > p2.0{
+        println!("Switch");
+        let temp = p1;
+        p1 = p2;
+        p2 = temp;
+    }
+    if p2.1 > p3.1{
+        println!("Switch");
+        let temp = p2;
+        p2 = p3;
+        p3 = temp;
+    }
+    println!("{:?} {:?} {:?}", p1, p2, p3);
+    rasterize(pixels, p1, p2, p3, color);
+}
+
+
+fn draw_square_outline(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize), size: usize) {
+    let upper_right = (upper_left.0 + size, upper_left.1);
+    let lower_left = (upper_left.0, upper_left.1 + size);
+    let lower_right = (upper_left.0 + size, upper_left.1 + size);
+    draw_line(pixels,  upper_left, upper_right);
+    draw_line(pixels,  upper_right, lower_right);
+    draw_line(pixels,  lower_right, lower_left);
+    draw_line(pixels, lower_left, upper_left);
+}
+
+fn draw_square_filled(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize), size: usize, color: [u8;3]){
+    for y in upper_left.0..upper_left.0+size {
+        for x in upper_left.1..upper_left.1+size {
+            pixels[y as usize][x as usize] = color;
+        }
+    }
+}
