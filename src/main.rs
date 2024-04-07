@@ -4,11 +4,12 @@ use std::path::Path;
 use std::io::BufWriter;
 
 fn main() {
-    //IMPORTANT ITS pixels[y][x]
     let width = 1000;
     let height = 1000;
     let mut pixels: Vec<Vec<[u8;3]>> = create_pixels(width, height);
-    draw_quadrangle_filled(&mut pixels, (100, 100), (1000, 200), (500, 1000), (900, 700), [0,255,255]);
+    for i in 0..10{
+        draw_square_filled(&mut pixels, (100*i,0), 100, create_alpha_value(&[0;3], &[255;3], (10*(i+1)) as u8));
+    }
     pixels_to_ppm(pixels);
 }
 
@@ -279,7 +280,7 @@ fn draw_square_outline(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize)
 fn draw_square_filled(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize), size: usize, color: [u8;3]){
     for y in upper_left.0..upper_left.0+size {
         for x in upper_left.1..upper_left.1+size {
-            pixels[y as usize][x as usize] = color;
+            pixels[x as usize][y as usize] = color;
         }
     }
 }
@@ -294,4 +295,14 @@ fn draw_quadrangle_outline(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, us
 fn draw_quadrangle_filled(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (isize, isize), upper_right: (isize, isize) , lower_left: (isize, isize), lower_right: (isize, isize), color: [u8;3] ){
     rasterize(pixels, upper_left, lower_left, upper_right, color);
     rasterize(pixels, lower_right, upper_right, lower_left, color);
+}
+
+fn create_alpha_value(background: &[u8;3], color: &[u8;3], percent:u8) -> [u8;3] {
+    let mut result: [u8;3] = [0;3];
+    let mut ratio:f32 = 0.0;
+    for i in 0..3 {
+        println!("{}",  (((background[i] as usize) * ((100-percent) as usize) +(color[i] as usize) * (percent as usize))/100) as u8);
+        result[i] = (((background[i] as usize) * ((100-percent) as usize) +(color[i] as usize) * (percent as usize))/100) as u8;
+    }
+    return result;
 }
