@@ -8,7 +8,7 @@ fn main() {
     let width = 1000;
     let height = 1000;
     let mut pixels: Vec<Vec<[u8;3]>> = create_pixels(width, height);
-    draw_quadrangle_filled(&mut pixels, (100, 100), (1000, 200), (500, 1000), (900, 700), [0,255,255]);
+    draw_filled_triangle(&mut pixels, (0,0), (500,300), (700,600), [100,200,255]);
     pixels_to_ppm(pixels);
 }
 
@@ -111,10 +111,6 @@ fn draw_line(pixels: &mut Vec<Vec<[u8;3]>>, start: (usize, usize), end: (usize, 
         }
         pixels[y as usize][x as usize] = [0x00;3];
     }
-}
-
-fn cord_transform(width: usize, cord: (usize, usize)) -> usize{
-    return cord.0+cord.1*width;
 }
 
 fn sign(x: isize) -> i8 {
@@ -226,42 +222,35 @@ fn draw_filled_triangle(pixels: &mut Vec<Vec<[u8;3]>>, p1 : (isize, isize), p2 :
     let mut p2 = p2;
     let mut p3 = p3;
     if p1.0 > p2.0{
-        println!("Switch");
         let temp = p1;
         p1 = p2;
         p2 = temp;
     }
-    if p2.1 > p3.1{
-        println!("Switch");
+    if p2.1 < p3.1{
         let temp = p2;
         p2 = p3;
         p3 = temp;
     }
     if p1.0 > p2.0{
-        println!("Switch");
         let temp = p1;
         p1 = p2;
         p2 = temp;
     }
-    if p2.1 > p3.1{
-        println!("Switch");
+    if p2.1 < p3.1{
         let temp = p2;
         p2 = p3;
         p3 = temp;
     }
     if p1.0 > p2.0{
-        println!("Switch");
         let temp = p1;
         p1 = p2;
         p2 = temp;
     }
-    if p2.1 > p3.1{
-        println!("Switch");
+    if p2.1 < p3.1{
         let temp = p2;
         p2 = p3;
         p3 = temp;
     }
-    println!("{:?} {:?} {:?}", p1, p2, p3);
     rasterize(pixels, p1, p2, p3, color);
 }
 
@@ -292,6 +281,6 @@ fn draw_quadrangle_outline(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, us
 }
 
 fn draw_quadrangle_filled(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (isize, isize), upper_right: (isize, isize) , lower_left: (isize, isize), lower_right: (isize, isize), color: [u8;3] ){
-    rasterize(pixels, upper_left, lower_left, upper_right, color);
-    rasterize(pixels, lower_right, upper_right, lower_left, color);
+    draw_filled_triangle(pixels, upper_left, lower_left, upper_right, color);
+    draw_filled_triangle(pixels, lower_right, upper_right, lower_left, color);
 }
