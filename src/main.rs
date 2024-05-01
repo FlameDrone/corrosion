@@ -9,9 +9,16 @@ struct Triangle {
     p3: (usize, usize),
 }
 
+struct Quadrangle{
+    p1: (usize, usize),
+    p2: (usize, usize),
+    p3: (usize, usize),
+    p4: (usize, usize),
+}
+
 trait Object {
     fn draw(self: &Self, pixels: &mut Vec<Vec<[u8; 3]>>, color: [u8; 3]) {}
-    fn outline(self: &Self, pixels: &mut Vec<Vec<[u8; 3]>>) {}
+    fn outline(self: &Self, pixels: &mut Vec<Vec<[u8; 3]>>, color: [u8; 3]) {}
     fn displace(self: &mut Self, vector: (isize, isize)) {}
     fn rotate(self: &mut Self, angle: f32) {}
 }
@@ -53,10 +60,10 @@ impl Object for Triangle {
         }
         rasterize(pixels, p1, p2, p3, color);
     }
-    fn outline(self: &Self, pixels: &mut Vec<Vec<[u8; 3]>>) {
-        draw_line(pixels, self.p1, self.p2);
-        draw_line(pixels, self.p2, self.p3);
-        draw_line(pixels, self.p1, self.p3);
+    fn outline(self: &Self, pixels: &mut Vec<Vec<[u8; 3]>>, color: [u8; 3]) {
+        draw_line(pixels, self.p1, self.p2, color);
+        draw_line(pixels, self.p2, self.p3, color);
+        draw_line(pixels, self.p1, self.p3, color);
     }
     fn displace(self: &mut Self, vector: (isize, isize)) {
         self.p1 = add_vector(self.p1, vector);
@@ -76,6 +83,90 @@ impl Object for Triangle {
         self.p3 = add_vector(mid, dif3);
     }
 }
+
+impl Object for Quadrangle{
+    fn draw(self: &Self, pixels: &mut Vec<Vec<[u8; 3]>>, color: [u8; 3]) {
+        Triangle{p1:self.p1, p2:self.p2, p3:self.p3}.draw(pixels, color);
+        Triangle{p1:self.p4, p2:self.p2, p3:self.p3}.draw(pixels, color);
+        draw_line(pixels, self.p2, self.p3, color)
+    }
+    fn outline(self: &Self, pixels: &mut Vec<Vec<[u8; 3]>>, color: [u8; 3]) {
+        draw_line(pixels, self.p1, self.p2, color);
+        draw_line(pixels, self.p2, self.p4, color);
+        draw_line(pixels, self.p1, self.p3, color);
+        draw_line(pixels, self.p3, self.p4, color);
+    }
+    fn displace(self: &mut Self, vector: (isize, isize)) {
+        self.p1 = add_vector(self.p1, vector);
+        self.p2 = add_vector(self.p2, vector);
+        self.p3 = add_vector(self.p3, vector);
+        self.p4 = add_vector(self.p4, vector);
+    }
+
+    fn rotate(self: &mut Self, angle: f32) {
+        let mid = ((self.p1.0+self.p2.0+self.p3.0+self.p4.0)/4,(self.p1.1+self.p2.1+self.p3.1+self.p4.1)/4);
+        let mut dif1 = ((self.p1.0 as isize)-(mid.0 as isize),(self.p1.1 as isize)-(mid.1 as isize));
+        let mut dif2 = ((self.p2.0 as isize)-(mid.0 as isize),(self.p2.1 as isize)-(mid.1 as isize));
+        let mut dif3 = ((self.p3.0 as isize)-(mid.0 as isize),(self.p3.1 as isize)-(mid.1 as isize));
+        let mut dif4 = ((self.p4.0 as isize)-(mid.0 as isize),(self.p4.1 as isize)-(mid.1 as isize));
+        dif1 = ((((dif1.0 as f32) * angle.cos()) as isize)-(((dif1.1 as f32) * angle.sin()) as isize), (((dif1.0 as f32)*angle.sin()) as isize)+(((dif1.1 as f32)*angle.cos()) as isize));
+        dif2 = ((((dif2.0 as f32) * angle.cos()) as isize)-(((dif2.1 as f32) * angle.sin()) as isize), (((dif2.0 as f32)*angle.sin()) as isize)+(((dif2.1 as f32)*angle.cos()) as isize));
+        dif3 = ((((dif3.0 as f32) * angle.cos()) as isize)-(((dif3.1 as f32) * angle.sin()) as isize), (((dif3.0 as f32)*angle.sin()) as isize)+(((dif3.1 as f32)*angle.cos()) as isize));
+        dif4 = ((((dif4.0 as f32) * angle.cos()) as isize)-(((dif4.1 as f32) * angle.sin()) as isize), (((dif4.0 as f32)*angle.sin()) as isize)+(((dif4.1 as f32)*angle.cos()) as isize));
+        self.p1 = add_vector(mid, dif1);
+        self.p2 = add_vector(mid, dif2);
+        self.p3 = add_vector(mid, dif3);
+        self.p4 = add_vector(mid, dif4);
+    }
+}
+
+impl Quadrangle{
+    fn untangle(self: &mut Self){
+    let mut p1 = self.p1;
+    let mut p2 = self.p2;
+    let mut p3 = self.p3;
+    let mut p4 = self.p4;
+    if p1.0 > p2.0 {
+        let temp = p1;
+        p1 = p2;
+        p2 = temp;
+    }
+    if p2.0 > p3.0 {
+        let temp = p2;
+        p2 = p3;
+        p3 = temp;
+    }
+    if p1.0 < p2.0 {
+        if p2.0 > p4.0{
+            let temp = p2;
+            p2 = p4;
+            p4 = temp;
+        }
+    }
+    else{
+        if p1.0 > p4.0 {
+            let temp = p1;
+            p1 = p4;
+            p4 = temp;
+        }
+    }
+    if p1.1 > p2.1 {
+        let temp = p1;
+        p1 = p2;
+        p2 = temp;
+    }
+    if p3.1 > p4.1 {
+        let temp = p3;
+        p3 = p4;
+        p4 = temp;
+    }
+    self.p1 = p1;
+    self.p2 = p2;
+    self.p3 = p3;
+    self.p4 = p4;
+    }
+}
+
 fn main() {
     //IMPORTANT ITS pixels[y][x]
     let width = 1000;
@@ -88,7 +179,17 @@ fn main() {
     };
     tri.draw(&mut pixels, [100, 175, 235]);
     tri.rotate(90.0);
-    tri.outline(&mut pixels);
+    tri.outline(&mut pixels, [0;3]);
+    let mut quad = Quadrangle{
+        p1: (300, 200),
+        p2: (700, 400),
+        p3: (200, 800),
+        p4: (500, 600)
+    };  
+    quad.untangle();
+    quad.draw(&mut pixels, [100,100,0]);
+    quad.rotate(31.0);
+    quad.outline(&mut pixels, [0;3]);
     pixels_to_ppm(pixels);
 }
 
@@ -136,7 +237,7 @@ fn create_pixels(width: usize, height: usize) -> Vec<Vec<[u8; 3]>> {
     return pixels;
 }
 
-fn draw_line(pixels: &mut Vec<Vec<[u8; 3]>>, start: (usize, usize), end: (usize, usize)) {
+fn draw_line(pixels: &mut Vec<Vec<[u8; 3]>>, start: (usize, usize), end: (usize, usize), color: [u8; 3]) {
     let pdx: i8;
     let ddx: i8;
     let pdy: i8;
@@ -177,7 +278,7 @@ fn draw_line(pixels: &mut Vec<Vec<[u8; 3]>>, start: (usize, usize), end: (usize,
 
     let mut err: isize = deltafd / 2;
 
-    pixels[start.1][start.0] = [0x00; 3];
+    pixels[start.1][start.0] = color;
 
     for _i in 0..deltafd {
         err -= deltasd;
@@ -189,7 +290,7 @@ fn draw_line(pixels: &mut Vec<Vec<[u8; 3]>>, start: (usize, usize), end: (usize,
             x += pdx as isize;
             y += pdy as isize;
         }
-        pixels[y as usize][x as usize] = [0x00; 3];
+        pixels[y as usize][x as usize] = color;
     }
 }
 
@@ -201,17 +302,6 @@ fn sign(x: isize) -> i8 {
         return -1;
     }
     return 0;
-}
-
-fn draw_triangle_outline(
-    pixels: &mut Vec<Vec<[u8; 3]>>,
-    p1: (usize, usize),
-    p2: (usize, usize),
-    p3: (usize, usize),
-) {
-    draw_line(pixels, p1, p2);
-    draw_line(pixels, p2, p3);
-    draw_line(pixels, p1, p3);
 }
 
 fn rasterize(
@@ -295,72 +385,6 @@ fn max(a: usize, b: usize, c: usize) -> usize {
     }
 }
 
-fn quadrangle_outline(
-    pixels: &mut Vec<Vec<[u8; 3]>>,
-    p1: (usize, usize),
-    p2: (usize, usize),
-    p3: (usize, usize),
-    p4: (usize, usize),
-) {
-    draw_line(pixels, p1, p2);
-    draw_line(pixels, p2, p3);
-    draw_line(pixels, p3, p4);
-    draw_line(pixels, p4, p1);
-}
-
-fn draw_filled_triangle(
-    pixels: &mut Vec<Vec<[u8; 3]>>,
-    p1: (usize, usize),
-    p2: (usize, usize),
-    p3: (usize, usize),
-    color: [u8; 3],
-) {
-    let mut p1 = p1;
-    let mut p2 = p2;
-    let mut p3 = p3;
-    if p1.0 > p2.0 {
-        let temp = p1;
-        p1 = p2;
-        p2 = temp;
-    }
-    if p2.1 < p3.1 {
-        let temp = p2;
-        p2 = p3;
-        p3 = temp;
-    }
-    if p1.0 > p2.0 {
-        let temp = p1;
-        p1 = p2;
-        p2 = temp;
-    }
-    if p2.1 < p3.1 {
-        let temp = p2;
-        p2 = p3;
-        p3 = temp;
-    }
-    if p1.0 > p2.0 {
-        let temp = p1;
-        p1 = p2;
-        p2 = temp;
-    }
-    if p2.1 < p3.1 {
-        let temp = p2;
-        p2 = p3;
-        p3 = temp;
-    }
-    rasterize(pixels, p1, p2, p3, color);
-}
-
-fn draw_square_outline(pixels: &mut Vec<Vec<[u8; 3]>>, upper_left: (usize, usize), size: usize) {
-    let upper_right = (upper_left.0 + size, upper_left.1);
-    let lower_left = (upper_left.0, upper_left.1 + size);
-    let lower_right = (upper_left.0 + size, upper_left.1 + size);
-    draw_line(pixels, upper_left, upper_right);
-    draw_line(pixels, upper_right, lower_right);
-    draw_line(pixels, lower_right, lower_left);
-    draw_line(pixels, lower_left, upper_left);
-}
-
 fn draw_square_filled(
     pixels: &mut Vec<Vec<[u8; 3]>>,
     upper_left: (usize, usize),
@@ -374,31 +398,6 @@ fn draw_square_filled(
     }
 }
 
-fn draw_quadrangle_outline(
-    pixels: &mut Vec<Vec<[u8; 3]>>,
-    upper_left: (usize, usize),
-    upper_right: (usize, usize),
-    lower_left: (usize, usize),
-    lower_right: (usize, usize),
-) {
-    draw_line(pixels, upper_left, upper_right);
-    draw_line(pixels, upper_right, lower_right);
-    draw_line(pixels, lower_right, lower_left);
-    draw_line(pixels, lower_left, upper_left);
-}
-
-fn draw_quadrangle_filled(
-    pixels: &mut Vec<Vec<[u8; 3]>>,
-    upper_left: (usize, usize),
-    upper_right: (usize, usize),
-    lower_left: (usize, usize),
-    lower_right: (usize, usize),
-    color: [u8; 3],
-) {
-    draw_filled_triangle(pixels, upper_left, lower_left, upper_right, color);
-    draw_filled_triangle(pixels, lower_right, upper_right, lower_left, color);
-}
-
 fn add_vector(p: (usize, usize), vector: (isize, isize)) -> (usize, usize){
     let p0: isize = (p.0 as isize)+(vector.0);
     let p1: isize = (p.1 as isize)+(vector.1);
@@ -406,4 +405,46 @@ fn add_vector(p: (usize, usize), vector: (isize, isize)) -> (usize, usize){
         panic!("Displaced out of bounds!");
     }
     (p0 as usize, p1 as usize)
+}
+
+fn untangle_quadrangle(p1: (usize, usize), p2: (usize, usize), p3: (usize, usize), p4: (usize, usize)) -> [(usize,usize);4]{
+    let mut p1 = p1;
+    let mut p2 = p2;
+    let mut p3 = p3;
+    let mut p4 = p4;
+    if p1.0 > p2.0 {
+        let temp = p1;
+        p1 = p2;
+        p2 = temp;
+    }
+    if p2.0 > p3.0 {
+        let temp = p2;
+        p2 = p3;
+        p3 = temp;
+    }
+    if p1.0 < p2.0 {
+        if p2.0 > p4.0{
+            let temp = p2;
+            p2 = p4;
+            p4 = temp;
+        }
+    }
+    else{
+        if p1.0 > p4.0 {
+            let temp = p1;
+            p1 = p4;
+            p4 = temp;
+        }
+    }
+    if p1.1 > p2.1 {
+        let temp = p1;
+        p1 = p2;
+        p2 = temp;
+    }
+    if p3.1 > p4.1 {
+        let temp = p3;
+        p3 = p4;
+        p4 = temp;
+    }
+    return [p1,p2,p3,p4]
 }
