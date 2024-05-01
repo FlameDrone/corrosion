@@ -168,14 +168,9 @@ impl Quadrangle{
 }
 
 fn main() {
+    //IMPORTANT ITS pixels[y][x]
     let width = 1000;
     let height = 1000;
-<<<<<<< HEAD
-    let mut pixels: Vec<Vec<[u8;3]>> = create_pixels(width, height);
-    for i in 0..10{
-        draw_square_filled(&mut pixels, (100*i,0), 100, create_alpha_value(&[0;3], &[255;3], (10*(i+1)) as u8));
-    }
-=======
     let mut pixels: Vec<Vec<[u8; 3]>> = create_pixels(width, height);
     let mut tri = Triangle {
         p1: (200, 100),
@@ -195,7 +190,6 @@ fn main() {
     quad.draw(&mut pixels, [100,100,0]);
     quad.rotate(31.0);
     quad.outline(&mut pixels, [0;3]);
->>>>>>> ee88828f4a1b3fceb9c742f6fa9214772a3b1d94
     pixels_to_ppm(pixels);
 }
 
@@ -447,62 +441,10 @@ fn untangle_quadrangle(p1: (usize, usize), p2: (usize, usize), p3: (usize, usize
         p1 = p2;
         p2 = temp;
     }
-<<<<<<< HEAD
-    if p2.1 > p3.1{
-        println!("Switch");
-        let temp = p2;
-        p2 = p3;
-        p3 = temp;
-    }
-    println!("{:?} {:?} {:?}", p1, p2, p3);
-    rasterize(pixels, p1, p2, p3, color);
-}
-
-
-fn draw_square_outline(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize), size: usize) {
-    let upper_right = (upper_left.0 + size, upper_left.1);
-    let lower_left = (upper_left.0, upper_left.1 + size);
-    let lower_right = (upper_left.0 + size, upper_left.1 + size);
-    draw_line(pixels,  upper_left, upper_right);
-    draw_line(pixels,  upper_right, lower_right);
-    draw_line(pixels,  lower_right, lower_left);
-    draw_line(pixels, lower_left, upper_left);
-}
-
-fn draw_square_filled(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize), size: usize, color: [u8;3]){
-    for y in upper_left.0..upper_left.0+size {
-        for x in upper_left.1..upper_left.1+size {
-            pixels[x as usize][y as usize] = color;
-        }
-    }
-}
-
-fn draw_quadrangle_outline(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (usize, usize), upper_right: (usize, usize) , lower_left: (usize, usize), lower_right: (usize, usize) ){
-    draw_line(pixels,  upper_left, upper_right);
-    draw_line(pixels,  upper_right, lower_right);
-    draw_line(pixels,  lower_right, lower_left);
-    draw_line(pixels, lower_left, upper_left);
-}
-
-fn draw_quadrangle_filled(pixels: &mut Vec<Vec<[u8;3]>>, upper_left: (isize, isize), upper_right: (isize, isize) , lower_left: (isize, isize), lower_right: (isize, isize), color: [u8;3] ){
-    rasterize(pixels, upper_left, lower_left, upper_right, color);
-    rasterize(pixels, lower_right, upper_right, lower_left, color);
-}
-
-fn create_alpha_value(background: &[u8;3], color: &[u8;3], percent:u8) -> [u8;3] {
-    let mut result: [u8;3] = [0;3];
-    let mut ratio:f32 = 0.0;
-    for i in 0..3 {
-        println!("{}",  (((background[i] as usize) * ((100-percent) as usize) +(color[i] as usize) * (percent as usize))/100) as u8);
-        result[i] = (((background[i] as usize) * ((100-percent) as usize) +(color[i] as usize) * (percent as usize))/100) as u8;
-    }
-    return result;
-=======
     if p3.1 > p4.1 {
         let temp = p3;
         p3 = p4;
         p4 = temp;
     }
     return [p1,p2,p3,p4]
->>>>>>> ee88828f4a1b3fceb9c742f6fa9214772a3b1d94
 }
